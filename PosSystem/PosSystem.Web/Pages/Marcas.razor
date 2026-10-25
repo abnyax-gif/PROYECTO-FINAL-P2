@@ -1,0 +1,84 @@
+@page "/marcas"
+@inject HttpClient Http
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h3>Mantenimiento de Marcas</h3>
+    <a href="/productos" class="btn btn-outline-secondary">Ir a Productos</a>
+</div>
+
+<div class="card mb-4 shadow-sm">
+    <div class="card-body">
+        <EditForm Model="marcaActual" OnValidSubmit="GuardarMarca">
+            <DataAnnotationsValidator />
+            <div class="row g-2 align-items-center">
+                <div class="col-md-8">
+                    <InputText @bind-Value="marcaActual.NombreMarca" class="form-control" placeholder="Nombre de la marca" />
+                    <ValidationMessage For="@(() => marcaActual.NombreMarca)" class="text-danger small" />
+                </div>
+                <div class="col-md-4">
+                    <button type="submit" class="btn btn-success me-2">Guardar</button>
+                    <button type="button" class="btn btn-secondary" @onclick="Limpiar">Limpiar</button>
+                </div>
+            </div>
+        </EditForm>
+    </div>
+</div>
+
+<table class="table table-striped table-hover align-middle">
+    <thead class="table-dark">
+        <tr>
+            <th>ID</th>
+            <th>Marca</th>
+            <th class="text-center">Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (marcas != null)
+        {
+            @foreach (var m in marcas)
+            {
+                <tr>
+                    <td>@m.IdMarca</td>
+                    <td>@m.NombreMarca</td>
+                    <td class="text-center">
+                        <button class="btn btn-warning btn-sm me-1" @onclick="() => Editar(m)">Editar</button>
+                        <button class="btn btn-danger btn-sm" @onclick="() => Eliminar(m.IdMarca)">Eliminar</button>
+                    </td>
+                </tr>
+            }
+        }
+    </tbody>
+</table>
+
+@code {
+    private List<Marca>? marcas;
+    private Marca marcaActual = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarMarcas();
+    }
+
+    private async Task CargarMarcas() => marcas = await Http.GetFromJsonAsync<List<Marca>>("api/marcas");
+
+    private async Task GuardarMarca()
+    {
+        if (marcaActual.IdMarca == 0)
+            await Http.PostAsJsonAsync("api/marcas", marcaActual);
+        else
+            await Http.PutAsJsonAsync($"api/marcas/{marcaActual.IdMarca}", marcaActual);
+
+        Limpiar();
+        await CargarMarcas();
+    }
+
+    private void Editar(Marca m) => marcaActual = new Marca { IdMarca = m.IdMarca, NombreMarca = m.NombreMarca };
+
+    private async Task Eliminar(short id)
+    {
+        await Http.DeleteAsync($"api/marcas/{id}");
+        await CargarMarcas();
+    }
+
+    private void Limpiar() => marcaActual = new Marca();
+}

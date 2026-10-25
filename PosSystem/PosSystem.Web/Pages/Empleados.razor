@@ -1,0 +1,152 @@
+@page "/empleados"
+@inject HttpClient Http
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h3>Mantenimiento de Empleados</h3>
+    <a href="/puestos" class="btn btn-outline-primary">
+        <i class="bi bi-plus-circle me-1"></i>Administrar Puestos
+    </a>
+</div>
+
+<div class="card mb-4 shadow-sm">
+    <div class="card-body">
+        <h5>@(empleadoActual.IdEmpleado == 0 ? "Registrar Empleado" : "Editar Empleado")</h5>
+        <EditForm Model="empleadoActual" OnValidSubmit="GuardarEmpleado">
+            <DataAnnotationsValidator />
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">Nombres</label>
+                    <InputText @bind-Value="empleadoActual.Nombres" class="form-control" />
+                    <ValidationMessage For="@(() => empleadoActual.Nombres)" class="text-danger small" />
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Apellidos</label>
+                    <InputText @bind-Value="empleadoActual.Apellidos" class="form-control" />
+                    <ValidationMessage For="@(() => empleadoActual.Apellidos)" class="text-danger small" />
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Puesto</label>
+                    <InputSelect @bind-Value="empleadoActual.IdPuesto" class="form-select">
+                        <option value="0">-- Seleccione un puesto --</option>
+                        @if (puestos != null)
+                        {
+                            @foreach (var p in puestos)
+                            {
+                                <option value="@p.IdPuesto">@p.NombrePuesto</option>
+                            }
+                        }
+                    </InputSelect>
+                    <ValidationMessage For="@(() => empleadoActual.IdPuesto)" class="text-danger small" />
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Teléfono</label>
+                    <InputText @bind-Value="empleadoActual.Telefono" class="form-control" />
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">DPI</label>
+                    <InputText @bind-Value="empleadoActual.Dpi" class="form-control" />
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Dirección</label>
+                    <InputText @bind-Value="empleadoActual.Direccion" class="form-control" />
+                </div>
+            </div>
+            <div class="mt-3">
+                <button type="submit" class="btn btn-success me-2">Guardar</button>
+                <button type="button" class="btn btn-secondary" @onclick="Limpiar">Limpiar</button>
+            </div>
+        </EditForm>
+    </div>
+</div>
+
+<table class="table table-striped table-hover align-middle">
+    <thead class="table-dark">
+        <tr>
+            <th>ID</th>
+            <th>Nombre Completo</th>
+            <th>Puesto</th>
+            <th>Teléfono</th>
+            <th>DPI</th>
+            <th class="text-center">Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (empleados == null)
+        {
+            <tr><td colspan="6" class="text-center">Cargando...</td></tr>
+        }
+        else
+        {
+            @foreach (var e in empleados)
+            {
+                <tr>
+                    <td>@e.IdEmpleado</td>
+                    <td>@e.Nombres @e.Apellidos</td>
+                    <td>@e.Puesto?.NombrePuesto</td>
+                    <td>@e.Telefono</td>
+                    <td>@e.Dpi</td>
+                    <td class="text-center">
+                        <button class="btn btn-warning btn-sm me-1" @onclick="() => Editar(e)">Editar</button>
+                        <button class="btn btn-danger btn-sm" @onclick="() => Eliminar(e.IdEmpleado)">Eliminar</button>
+                    </td>
+                </tr>
+            }
+        }
+    </tbody>
+</table>
+
+@code {
+    private List<Empleado>? empleados;
+    private List<Puesto>? puestos;
+    private Empleado empleadoActual = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarDatos();
+    }
+
+    private async Task CargarDatos()
+    {
+        empleados = await Http.GetFromJsonAsync<List<Empleado>>("api/empleados");
+        puestos = await Http.GetFromJsonAsync<List<Puesto>>("api/puestos");
+    }
+
+    private async Task GuardarEmpleado()
+    {
+        if (empleadoActual.IdPuesto == 0) return;
+
+        if (empleadoActual.IdEmpleado == 0)
+            await Http.PostAsJsonAsync("api/empleados", empleadoActual);
+        else
+            await Http.PutAsJsonAsync($"api/empleados/{empleadoActual.IdEmpleado}", empleadoActual);
+
+        Limpiar();
+        await CargarDatos();
+    }
+
+    private void Editar(Empleado e)
+    {
+        empleadoActual = new Empleado
+        {
+            IdEmpleado = e.IdEmpleado,
+            Nombres = e.Nombres,
+            Apellidos = e.Apellidos,
+            IdPuesto = e.IdPuesto,
+            Telefono = e.Telefono,
+            Dpi = e.Dpi,
+            Direccion = e.Direccion,
+            Genero = e.Genero
+        };
+    }
+
+    private async Task Eliminar(int id)
+    {
+        await Http.DeleteAsync($"api/empleados/{id}");
+        await CargarDatos();
+    }
+
+    private void Limpiar()
+    {
+        empleadoActual = new Empleado();
+    }
+}

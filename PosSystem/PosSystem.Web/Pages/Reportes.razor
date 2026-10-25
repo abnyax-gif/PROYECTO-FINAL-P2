@@ -1,0 +1,159 @@
+@page "/reportes"
+@inject HttpClient Http
+
+<h3>Módulo de Reportes e Informes</h3>
+
+<ul class="nav nav-tabs mb-4" id="reportesTab" role="tablist">
+    <li class="nav-item">
+        <button class="nav-link @(tabActiva == 1 ? "active" : "")" @onclick="() => tabActiva = 1">
+            Reporte de Productos
+        </button>
+    </li>
+    <li class="nav-item">
+        <button class="nav-link @(tabActiva == 2 ? "active" : "")" @onclick="() => tabActiva = 2">
+            Alertas de Existencias
+        </button>
+    </li>
+    <li class="nav-item">
+        <button class="nav-link @(tabActiva == 3 ? "active" : "")" @onclick="() => tabActiva = 3">
+            Reporte de Ventas Realizadas
+        </button>
+    </li>
+</ul>
+
+@if (tabActiva == 1)
+{
+    <div class="card shadow-sm p-3">
+        <h5>Listado General de Productos</h5>
+        <table class="table table-striped">
+            <thead class="table-dark">
+                <tr>
+                    <th>Producto</th>
+                    <th>Marca</th>
+                    <th>Existencia</th>
+                    <th>Precio Costo</th>
+                    <th>Precio Venta</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (reporteProds != null)
+                {
+                    @foreach (var p in reporteProds)
+                    {
+                        <tr>
+                            <td>@p.Producto</td>
+                            <td>@p.Marca</td>
+                            <td>@p.Existencia</td>
+                            <td>Q @p.PrecioCosto</td>
+                            <td>Q @p.PrecioVenta</td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+}
+else if (tabActiva == 2)
+{
+    <div class="card shadow-sm p-3 border-danger">
+        <h5 class="text-danger">Productos con Existencia Crítica (menor o igual a 5)</h5>
+        <table class="table table-hover">
+            <thead class="table-danger">
+                <tr>
+                    <th>Producto</th>
+                    <th>Marca</th>
+                    <th>Existencia Actual</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (reporteStock != null)
+                {
+                    @foreach (var s in reporteStock)
+                    {
+                        <tr>
+                            <td>@s.Producto</td>
+                            <td>@s.Marca</td>
+                            <td><span class="badge bg-danger fs-6">@s.Existencia</span></td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+}
+else if (tabActiva == 3)
+{
+    <div class="card shadow-sm p-3">
+        <h5>Resumen Histórico de Ventas</h5>
+        <table class="table table-striped">
+            <thead class="table-dark">
+                <tr>
+                    <th>Fecha</th>
+                    <th>Cliente</th>
+                    <th>Empleado</th>
+                    <th>Total Venta</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (reporteVentas != null)
+                {
+                    @foreach (var v in reporteVentas)
+                    {
+                        <tr>
+                            <td>@v.FechaFactura.ToShortDateString()</td>
+                            <td>@v.Cliente</td>
+                            <td>@v.Empleado</td>
+                            <td class="fw-bold text-success">Q @v.TotalVenta</td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+@code {
+    private int tabActiva = 1;
+
+    private List<ProdReportDTO>? reporteProds;
+    private List<StockReportDTO>? reporteStock;
+    private List<VentaReportDTO>? reporteVentas;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            reporteProds = await Http.GetFromJsonAsync<List<ProdReportDTO>>("api/reportes/productos");
+            reporteStock = await Http.GetFromJsonAsync<List<StockReportDTO>>("api/reportes/existencias");
+            reporteVentas = await Http.GetFromJsonAsync<List<VentaReportDTO>>("api/reportes/ventas");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al obtener reportes: {ex.Message}");
+        }
+    }
+
+    public class ProdReportDTO
+    {
+        public string Producto { get; set; } = "";
+        public string Marca { get; set; } = "";
+        public int Existencia { get; set; }
+        public decimal PrecioCosto { get; set; }
+        public decimal PrecioVenta { get; set; }
+    }
+
+    public class StockReportDTO
+    {
+        public string Producto { get; set; } = "";
+        public string Marca { get; set; } = "";
+        public int Existencia { get; set; }
+    }
+
+    public class VentaReportDTO
+    {
+        public DateTime FechaFactura { get; set; }
+        public string Cliente { get; set; } = "";
+        public string Empleado { get; set; } = "";
+        public decimal TotalVenta { get; set; }
+    }
+}

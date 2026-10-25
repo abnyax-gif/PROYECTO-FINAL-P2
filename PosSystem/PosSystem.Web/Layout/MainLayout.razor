@@ -1,0 +1,38 @@
+﻿@inherits LayoutComponentBase
+@inject NavigationManager Navigation
+@inject Blazored.LocalStorage.ILocalStorageService LocalStorage
+@inject AuthenticationStateProvider AuthStateProvider
+
+<div class="page">
+    <div class="sidebar">
+        <NavMenu />
+    </div>
+
+    <main>
+        <div class="top-row px-4 d-flex justify-content-between align-items-center bg-light border-bottom">
+            <span class="fw-semibold">Sistema de Punto de Venta v1.0</span>
+            <AuthorizeView>
+                <Authorized>
+                    <span class="me-3">Bienvenido, <strong>@context.User.Identity?.Name</strong></span>
+                    <button class="btn btn-outline-danger btn-sm" @onclick="CerrarSesion">Cerrar Sesión</button>
+                </Authorized>
+                <NotAuthorized>
+                    <a href="/login" class="btn btn-primary btn-sm">Iniciar Sesión</a>
+                </NotAuthorized>
+            </AuthorizeView>
+        </div>
+
+        <article class="content px-4 py-3">
+            @Body
+        </article>
+    </main>
+</div>
+
+@code {
+    private async Task CerrarSesion()
+    {
+        await LocalStorage.RemoveItemAsync("authToken");
+        ((Auth.ApiAuthenticationStateProvider)AuthStateProvider).MarkUserAsLoggedOut();
+        Navigation.NavigateTo("/login");
+    }
+}

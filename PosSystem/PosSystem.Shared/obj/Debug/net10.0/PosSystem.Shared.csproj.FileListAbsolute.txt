@@ -1,0 +1,11 @@
+C:\Users\82XV0088GJ\Desktop\Proyectoprogra2\PosSystem\PosSystem.Shared\bin\Debug\net10.0\PosSystem.Shared.deps.json
+C:\Users\82XV0088GJ\Desktop\Proyectoprogra2\PosSystem\PosSystem.Shared\bin\Debug\net10.0\PosSystem.Shared.dll
+C:\Users\82XV0088GJ\Desktop\Proyectoprogra2\PosSystem\PosSystem.Shared\bin\Debug\net10.0\PosSystem.Shared.pdb
+C:\Users\82XV0088GJ\Desktop\Proyectoprogra2\PosSystem\PosSystem.Shared\obj\Debug\net10.0\PosSystem.Shared.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\82XV0088GJ\Desktop\Proyectoprogra2\PosSystem\PosSystem.Shared\obj\Debug\net10.0\PosSystem.Shared.AssemblyInfoInputs.cache
+C:\Users\82XV0088GJ\Desktop\Proyectoprogra2\PosSystem\PosSystem.Shared\obj\Debug\net10.0\PosSystem.Shared.AssemblyInfo.cs
+C:\Users\82XV0088GJ\Desktop\Proyectoprogra2\PosSystem\PosSystem.Shared\obj\Debug\net10.0\PosSystem.Shared.csproj.CoreCompileInputs.cache
+C:\Users\82XV0088GJ\Desktop\Proyectoprogra2\PosSystem\PosSystem.Shared\obj\Debug\net10.0\PosSystem.Shared.dll
+C:\Users\82XV0088GJ\Desktop\Proyectoprogra2\PosSystem\PosSystem.Shared\obj\Debug\net10.0\refint\PosSystem.Shared.dll
+C:\Users\82XV0088GJ\Desktop\Proyectoprogra2\PosSystem\PosSystem.Shared\obj\Debug\net10.0\PosSystem.Shared.pdb
+C:\Users\82XV0088GJ\Desktop\Proyectoprogra2\PosSystem\PosSystem.Shared\obj\Debug\net10.0\ref\PosSystem.Shared.dll

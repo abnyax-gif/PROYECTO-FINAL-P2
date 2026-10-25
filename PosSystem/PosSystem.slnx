@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="PosSystem.Api/PosSystem.Api.csproj" />
+  <Project Path="PosSystem.Shared/PosSystem.Shared.csproj" />
+  <Project Path="PosSystem.Web/PosSystem.Web.csproj" />
+</Solution>

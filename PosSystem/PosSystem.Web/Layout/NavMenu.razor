@@ -1,0 +1,59 @@
+﻿@using PosSystem.Shared.Entities
+@inject HttpClient Http
+
+<div class="top-row ps-3 navbar navbar-dark bg-dark">
+    <div class="container-fluid">
+        <a class="navbar-brand text-white fw-bold" href="">POS SYSTEM</a>
+    </div>
+</div>
+
+<div class="flex-column p-2">
+    @if (menuItems == null)
+    {
+        <p class="text-white p-3 fs-6">Cargando menú...</p>
+    }
+    else
+    {
+        @foreach (var item in menuItems)
+        {
+            <div class="nav-item mb-1">
+                @if (item.Hijos != null && item.Hijos.Any())
+                {
+                    <div class="px-3 py-2 text-white-50 fw-bold border-bottom border-secondary">
+                        <i class="@item.Icono me-2"></i>@item.Titulo
+                    </div>
+                    <div class="ms-3 my-1">
+                        @foreach (var hijo in item.Hijos)
+                        {
+                            <NavLink class="nav-link py-1 text-light" href="@hijo.Ruta">
+                                <i class="@hijo.Icono me-2"></i>@hijo.Titulo
+                            </NavLink>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <NavLink class="nav-link text-white fw-bold" href="@item.Ruta" Match="NavLinkMatch.All">
+                        <i class="@item.Icono me-2"></i>@item.Titulo
+                    </NavLink>
+                }
+            </div>
+        }
+    }
+</div>
+
+@code {
+    private List<MenuOpcion>? menuItems;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            menuItems = await Http.GetFromJsonAsync<List<MenuOpcion>>("api/menu");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al cargar el menú dinámico: {ex.Message}");
+        }
+    }
+}

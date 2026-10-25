@@ -1,0 +1,193 @@
+@page "/compras"
+@inject HttpClient Http
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h3>Módulo de Compras (Maestro/Detalle)</h3>
+    <a href="/proveedores" class="btn btn-outline-primary">Administrar Proveedores</a>
+</div>
+
+@if (!string.IsNullOrEmpty(mensajeError))
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @mensajeError
+        <button type="button" class="btn-close" @onclick="() => mensajeError = null"></button>
+    </div>
+}
+
+@if (!string.IsNullOrEmpty(mensajeExito))
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @mensajeExito
+        <button type="button" class="btn-close" @onclick="() => mensajeExito = null"></button>
+    </div>
+}
+
+<div class="card mb-4 shadow-sm border-primary">
+    <div class="card-header bg-primary text-white font-weight-bold">
+        Nueva Orden de Compra
+    </div>
+    <div class="card-body">
+        <EditForm Model="nuevaCompra" OnValidSubmit="RegistrarCompra">
+            <DataAnnotationsValidator />
+            <div class="row g-3 mb-3">
+                <div class="col-md-4">
+                    <label class="form-label fw-bold">No. Orden Compra</label>
+                    <InputNumber @bind-Value="nuevaCompra.NoOrdenCompra" class="form-control" />
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-bold">Proveedor</label>
+                    <InputSelect @bind-Value="nuevaCompra.IdProveedor" class="form-select">
+                        <option value="0">-- Seleccione Proveedor --</option>
+                        @if (proveedores != null)
+                        {
+                            @foreach (var p in proveedores)
+                            {
+                                <option value="@p.IdProveedor">@p.NombreProveedor</option>
+                            }
+                        }
+                    </InputSelect>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-bold">Fecha Orden</label>
+                    <InputDate @bind-Value="nuevaCompra.FechaOrden" class="form-control" />
+                </div>
+            </div>
+
+            <hr />
+            <h5 class="mt-3">Agregar Productos a la Compra</h5>
+            <div class="row g-3 align-items-end mb-3">
+                <div class="col-md-4">
+                    <label class="form-label">Producto</label>
+                    <select class="form-select" @bind="idProductoSeleccionado">
+                        <option value="0">-- Seleccione Producto --</option>
+                        @if (productos != null)
+                        {
+                            @foreach (var p in productos)
+                            {
+                                <option value="@p.IdProducto">@p.NombreProducto (Existencia: @p.Existencia)</option>
+                            }
+                        }
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Cantidad</label>
+                    <input type="number" class="form-control" @bind="cantidadTemp" min="1" />
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Precio Costo Unitario (Q)</label>
+                    <input type="number" step="0.01" class="form-control" @bind="precioCostoTemp" min="0.01" />
+                </div>
+                <div class="col-md-2">
+                    <button type="button" class="btn btn-secondary w-100" @onclick="AgregarDetalle">Agregar</button>
+                </div>
+            </div>
+
+            <table class="table table-bordered align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Producto</th>
+                        <th>Cantidad</th>
+                        <th>Precio Costo</th>
+                        <th>Subtotal</th>
+                        <th>Precio Venta Calc. (+25%)</th>
+                        <th class="text-center">Acción</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (!nuevaCompra.Detalles.Any())
+                    {
+                        <tr><td colspan="6" class="text-center text-muted">No se han agregado productos.</td></tr>
+                    }
+                    else
+                    {
+                        @foreach (var d in nuevaCompra.Detalles)
+                        {
+                            var prod = productos?.FirstOrDefault(p => p.IdProducto == d.IdProducto);
+                            <tr>
+                                <td>@prod?.NombreProducto</td>
+                                <td>@d.Cantidad</td>
+                                <td>Q @d.PrecioCostoUnitario</td>
+                                <td>Q @(d.Cantidad * d.PrecioCostoUnitario)</td>
+                                <td class="text-success font-weight-bold">Q @(Math.Round(d.PrecioCostoUnitario * 1.25m, 2))</td>
+                                <td class="text-center">
+                                    <button type="button" class="btn btn-sm btn-outline-danger" @onclick="() => QuitarDetalle(d)">Quitar</button>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+
+            <div class="d-flex justify-content-end">
+                <button type="submit" class="btn btn-success btn-lg" disabled="@(!nuevaCompra.Detalles.Any())">
+                    Confirmar y Procesar Compra
+                </button>
+            </div>
+        </EditForm>
+    </div>
+</div>
+
+@code {
+    private CompraCreateDTO nuevaCompra = new();
+    private List<Proveedor>? proveedores;
+    private List<Producto>? productos;
+
+    private int idProductoSeleccionado = 0;
+    private int cantidadTemp = 1;
+    private decimal precioCostoTemp = 0;
+
+    private string? mensajeError;
+    private string? mensajeExito;
+
+    protected override async Task OnInitializedAsync() => await CargarDatos();
+
+    private async Task CargarDatos()
+    {
+        proveedores = await Http.GetFromJsonAsync<List<Proveedor>>("api/proveedores");
+        productos = await Http.GetFromJsonAsync<List<Producto>>("api/productos");
+    }
+
+    private void AgregarDetalle()
+    {
+        if (idProductoSeleccionado <= 0 || cantidadTemp <= 0 || precioCostoTemp <= 0)
+        {
+            mensajeError = "Verifique que haya seleccionado un producto y ingresado cantidad y precio válidos.";
+            return;
+        }
+
+        mensajeError = null;
+        nuevaCompra.Detalles.Add(new CompraDetalleDTO
+        {
+            IdProducto = idProductoSeleccionado,
+            Cantidad = cantidadTemp,
+            PrecioCostoUnitario = precioCostoTemp
+        });
+
+        idProductoSeleccionado = 0;
+        cantidadTemp = 1;
+        precioCostoTemp = 0;
+    }
+
+    private void QuitarDetalle(CompraDetalleDTO d) => nuevaCompra.Detalles.Remove(d);
+
+    private async Task RegistrarCompra()
+    {
+        if (nuevaCompra.IdProveedor == 0)
+        {
+            mensajeError = "Debe seleccionar un proveedor.";
+            return;
+        }
+
+        var res = await Http.PostAsJsonAsync("api/compras", nuevaCompra);
+        if (res.IsSuccessStatusCode)
+        {
+            mensajeExito = "¡Compra registrada con éxito! El inventario y precios se han actualizado correctamente.";
+            nuevaCompra = new CompraCreateDTO();
+            await CargarDatos();
+        }
+        else
+        {
+            mensajeError = await res.Content.ReadAsStringAsync();
+        }
+    }
+}
